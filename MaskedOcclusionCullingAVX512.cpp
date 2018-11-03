@@ -23,6 +23,8 @@
 #include "FrameRecorder.h"
 #endif
 
+#define USE_AVX512 1
+
 // Make sure compiler supports AVX-512 intrinsics: Visual Studio 2017 (Update 3) || Intel C++ Compiler 16.0 || Clang 4.0 || GCC 5.0
 #if USE_AVX512 != 0 && ((defined(_MSC_VER) && _MSC_VER >= 1911) || (defined(__INTEL_COMPILER) && __INTEL_COMPILER >= 1600) || (defined(__clang__) && __clang_major__ >= 4) || (defined(__GNUC__) && __GNUC__ >= 5))
 
@@ -161,7 +163,8 @@ MAKE_ACCESSOR(simd_i32, __m512i, int, const, 16)
 
 typedef MaskedOcclusionCulling::VertexLayout VertexLayout;
 
-FORCE_INLINE void GatherVertices(__m512 *vtxX, __m512 *vtxY, __m512 *vtxW, const float *inVtx, const unsigned int *inTrisPtr, int numLanes, const VertexLayout &vtxLayout)
+template <class T_Index>
+FORCE_INLINE void GatherVertices(__m512 *vtxX, __m512 *vtxY, __m512 *vtxW, const float *inVtx, const T_Index *inTrisPtr, int numLanes, const VertexLayout &vtxLayout)
 {
 	assert(numLanes >= 1);
 
@@ -191,9 +194,16 @@ FORCE_INLINE void GatherVertices(__m512 *vtxX, __m512 *vtxY, __m512 *vtxW, const
 
 	// Fetch triangle indices. 
 	__m512i vtxIdx[3];
-	vtxIdx[0] = _mmw_mullo_epi32(_mm512_i32gather_epi32(safeTriIdxOffset, (const int*)inTrisPtr + 0, 4), _mmw_set1_epi32(vtxLayout.mStride));
-	vtxIdx[1] = _mmw_mullo_epi32(_mm512_i32gather_epi32(safeTriIdxOffset, (const int*)inTrisPtr + 1, 4), _mmw_set1_epi32(vtxLayout.mStride));
-	vtxIdx[2] = _mmw_mullo_epi32(_mm512_i32gather_epi32(safeTriIdxOffset, (const int*)inTrisPtr + 2, 4), _mmw_set1_epi32(vtxLayout.mStride));
+	vtxIdx[0] = _mmw_mullo_epi32(_mm512_i32gather_epi32(safeTriIdxOffset, (const int*)(inTrisPtr + 0), sizeof(T_Index)), _mmw_set1_epi32(vtxLayout.mStride));
+	vtxIdx[1] = _mmw_mullo_epi32(_mm512_i32gather_epi32(safeTriIdxOffset, (const int*)(inTrisPtr + 1), sizeof(T_Index)), _mmw_set1_epi32(vtxLayout.mStride));
+	vtxIdx[2] = _mmw_mullo_epi32(_mm512_i32gather_epi32(safeTriIdxOffset, (const int*)(inTrisPtr + 2), sizeof(T_Index)), _mmw_set1_epi32(vtxLayout.mStride));
+
+	if(sizeof(T_Index) == 2)
+	{
+		vtxIdx[0] = _mm512_and_si512(vtxIdx[0], _mmw_set1_epi32(65535));
+		vtxIdx[1] = _mm512_and_si512(vtxIdx[1], _mmw_set1_epi32(65535));
+		vtxIdx[2] = _mm512_and_si512(vtxIdx[2], _mmw_set1_epi32(65535));
+	}
 
 	char *vPtr = (char *)inVtx;
 

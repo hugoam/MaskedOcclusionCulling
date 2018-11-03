@@ -165,7 +165,8 @@ MAKE_ACCESSOR(simd_i32, __m256i, int, const, 8)
 
 typedef MaskedOcclusionCulling::VertexLayout VertexLayout;
 
-FORCE_INLINE void GatherVertices(__m256 *vtxX, __m256 *vtxY, __m256 *vtxW, const float *inVtx, const unsigned int *inTrisPtr, int numLanes, const VertexLayout &vtxLayout)
+template <class T_Index>
+FORCE_INLINE void GatherVertices(__m256 *vtxX, __m256 *vtxY, __m256 *vtxW, const float *inVtx, const T_Index *inTrisPtr, int numLanes, const VertexLayout &vtxLayout)
 {
 	assert(numLanes >= 1);
 
@@ -187,9 +188,16 @@ FORCE_INLINE void GatherVertices(__m256 *vtxX, __m256 *vtxY, __m256 *vtxW, const
 
 	// Fetch triangle indices. 
 	__m256i vtxIdx[3];
-	vtxIdx[0] = _mmw_mullo_epi32(_mm256_i32gather_epi32((const int*)inTrisPtr + 0, safeTriIdxOffset, 4), _mmw_set1_epi32(vtxLayout.mStride));
-	vtxIdx[1] = _mmw_mullo_epi32(_mm256_i32gather_epi32((const int*)inTrisPtr + 1, safeTriIdxOffset, 4), _mmw_set1_epi32(vtxLayout.mStride));
-	vtxIdx[2] = _mmw_mullo_epi32(_mm256_i32gather_epi32((const int*)inTrisPtr + 2, safeTriIdxOffset, 4), _mmw_set1_epi32(vtxLayout.mStride));
+	vtxIdx[0] = _mmw_mullo_epi32(_mm256_i32gather_epi32((const int*)(inTrisPtr + 0), safeTriIdxOffset, sizeof(T_Index)), _mmw_set1_epi32(vtxLayout.mStride));
+	vtxIdx[1] = _mmw_mullo_epi32(_mm256_i32gather_epi32((const int*)(inTrisPtr + 1), safeTriIdxOffset, sizeof(T_Index)), _mmw_set1_epi32(vtxLayout.mStride));
+	vtxIdx[2] = _mmw_mullo_epi32(_mm256_i32gather_epi32((const int*)(inTrisPtr + 2), safeTriIdxOffset, sizeof(T_Index)), _mmw_set1_epi32(vtxLayout.mStride));
+
+	if (sizeof(T_Index) == 2)
+	{
+		vtxIdx[0] = _mm256_and_si256(vtxIdx[0], _mmw_set1_epi32(65535));
+		vtxIdx[1] = _mm256_and_si256(vtxIdx[1], _mmw_set1_epi32(65535));
+		vtxIdx[2] = _mm256_and_si256(vtxIdx[2], _mmw_set1_epi32(65535));
+	}
 
 	char *vPtr = (char *)inVtx;
 

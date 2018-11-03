@@ -26,7 +26,8 @@
 	#include <intrin.h>
 	#include <new.h>
 
-	#define FORCE_INLINE __forceinline
+	#define FORCE_INLINE inline
+	//#define FORCE_INLINE __forceinline
 
 	FORCE_INLINE unsigned long find_clear_lsb(unsigned int *mask)
 	{

@@ -123,6 +123,7 @@ class FrameRecorder;
 
 #endif // #if MOC_RECORDER_ENABLE
 
+#include <cstdint>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Masked occlusion culling class
@@ -361,7 +362,8 @@ public:
 	 * \return Will return VIEW_CULLED if all triangles are either outside the frustum or
 	 *         backface culled, returns VISIBLE otherwise.
 	 */
-	virtual CullingResult RenderTriangles(const float *inVtx, const unsigned int *inTris, int nTris, const float *modelToClipMatrix = nullptr, BackfaceWinding bfWinding = BACKFACE_CW, ClipPlanes clipPlaneMask = CLIP_PLANE_ALL, const VertexLayout &vtxLayout = VertexLayout(16, 4, 12)) = 0;
+	virtual CullingResult RenderTriangles(const float *inVtx, const uint32_t *inTris, int nTris, const float *modelToClipMatrix = nullptr, BackfaceWinding bfWinding = BACKFACE_CW, ClipPlanes clipPlaneMask = CLIP_PLANE_ALL, const VertexLayout &vtxLayout = VertexLayout(16, 4, 12)) = 0;
+	virtual CullingResult RenderTriangles(const float *inVtx, const uint16_t *inTris, int nTris, const float *modelToClipMatrix = nullptr, BackfaceWinding bfWinding = BACKFACE_CW, ClipPlanes clipPlaneMask = CLIP_PLANE_ALL, const VertexLayout &vtxLayout = VertexLayout(16, 4, 12)) = 0;
 
 	/*!
 	 * \brief Occlusion query for a rectangle with a given depth. The rectangle is given 
