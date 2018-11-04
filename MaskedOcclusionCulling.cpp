@@ -34,6 +34,9 @@
 
 static MaskedOcclusionCulling::Implementation DetectCPUFeatures(MaskedOcclusionCulling::pfnAlignedAlloc alignedAlloc, MaskedOcclusionCulling::pfnAlignedFree alignedFree)
 {
+#ifdef NO_CPUID
+	return MaskedOcclusionCulling::SSE2;
+#else
 	struct CpuInfo { int regs[4]; };
 
 	// Get regular CPUID values
@@ -81,6 +84,7 @@ static MaskedOcclusionCulling::Implementation DetectCPUFeatures(MaskedOcclusionC
     alignedFree( cpuId );
     alignedFree( cpuIdEx );
     return retVal;
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

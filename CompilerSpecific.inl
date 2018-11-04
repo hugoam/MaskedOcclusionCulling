@@ -94,6 +94,8 @@
 		return ((unsigned long long)edx << 32) | eax;
 	}
 
+#elif defined(__EMSCRIPTEN__)
+#define NO_CPUID
 #else
 	#error Unsupported compiler
 #endif
