@@ -22,7 +22,11 @@
 	#define __MICROSOFT_COMPILER
 #endif
 
-#if defined(_WIN32)	&& (defined(_MSC_VER) || defined(__INTEL_COMPILER) || defined(__clang__)) // Windows: MSVC / Intel compiler / clang
+#if defined(__EMSCRIPTEN__)
+	#define NO_CPUID
+	#include <immintrin.h>
+	#define FORCE_INLINE inline
+#elif defined(_WIN32)	&& (defined(_MSC_VER) || defined(__INTEL_COMPILER) || defined(__clang__)) // Windows: MSVC / Intel compiler / clang
 	#include <intrin.h>
 	#include <new.h>
 
@@ -94,8 +98,6 @@
 		return ((unsigned long long)edx << 32) | eax;
 	}
 
-#elif defined(__EMSCRIPTEN__)
-#define NO_CPUID
 #else
 	#error Unsupported compiler
 #endif
