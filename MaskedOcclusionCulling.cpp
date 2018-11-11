@@ -254,6 +254,7 @@ FORCE_INLINE void GatherVertices(__m128 *vtxX, __m128 *vtxY, __m128 *vtxW, const
 // SSE4.1 version
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef __SSE4_1__
 namespace MaskedOcclusionCullingSSE41
 {
 	FORCE_INLINE __m128i _mmw_mullo_epi32(const __m128i &a, const __m128i &b) { return _mm_mullo_epi32(a, b); }
@@ -303,7 +304,16 @@ namespace MaskedOcclusionCullingSSE41
 		new (object) MaskedOcclusionCullingPrivate(alignedAlloc, alignedFree);
 		return object;
 	}
-};
+}
+#else
+namespace MaskedOcclusionCullingSSE41
+{
+	MaskedOcclusionCulling *CreateMaskedOcclusionCulling(pfnAlignedAlloc alignedAlloc, pfnAlignedFree alignedFree)
+	{
+		return nullptr;
+	}
+}
+#endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SSE2 version
@@ -428,6 +438,9 @@ MaskedOcclusionCulling *MaskedOcclusionCulling::Create(Implementation RequestedS
 
 MaskedOcclusionCulling *MaskedOcclusionCulling::Create(Implementation RequestedSIMD, pfnAlignedAlloc alignedAlloc, pfnAlignedFree alignedFree)
 {
+#ifdef __EMSCRIPTEN__
+	return MaskedOcclusionCullingSSE2::CreateMaskedOcclusionCulling(alignedAlloc, alignedFree);
+#else
 	MaskedOcclusionCulling *object = nullptr;
 
 	MaskedOcclusionCulling::Implementation impl = DetectCPUFeatures(alignedAlloc, alignedFree);
@@ -446,6 +459,7 @@ MaskedOcclusionCulling *MaskedOcclusionCulling::Create(Implementation RequestedS
 		object = MaskedOcclusionCullingSSE2::CreateMaskedOcclusionCulling(alignedAlloc, alignedFree); // Use SSE2 (slow) version
 
 	return object;
+#endif
 }
 
 void MaskedOcclusionCulling::Destroy(MaskedOcclusionCulling *moc)
