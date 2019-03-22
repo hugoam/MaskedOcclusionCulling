@@ -23,8 +23,6 @@
 #include "FrameRecorder.h"
 #endif
 
-#define USE_AVX512 1
-
 // Make sure compiler supports AVX-512 intrinsics: Visual Studio 2017 (Update 3) || Intel C++ Compiler 16.0 || Clang 4.0 || GCC 5.0
 #if USE_AVX512 != 0 && ((defined(_MSC_VER) && _MSC_VER >= 1911) || (defined(__INTEL_COMPILER) && __INTEL_COMPILER >= 1600) || (defined(__clang__) && __clang_major__ >= 4) || (defined(__GNUC__) && __GNUC__ >= 5))
 
